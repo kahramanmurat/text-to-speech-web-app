@@ -264,8 +264,8 @@ MIT License - see [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
+- GitHub: [@yourusername](https://github.com/kahramanmurat)
+- LinkedIn: [Your Profile](https://www.linkedin.com/in/kahramanmurat)
 
 ---
 
