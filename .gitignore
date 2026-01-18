@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+lambda/node_modules/
+
+# Package files
+*.zip
+function.zip
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+/tmp/
+*.tmp
+
+# AWS credentials (never commit these!)
+*credentials*
+config.json

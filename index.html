@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech - Amazon Polly</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .voice-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .char-counter {
+            text-align: right;
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .audio-player {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .audio-player.active {
+            display: block;
+        }
+
+        audio {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .download-btn {
+            background: #4CAF50;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+        }
+
+        .error {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .config-notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text to Speech</h1>
+        <p class="subtitle">Powered by Amazon Polly</p>
+
+        <div class="config-notice">
+            <strong>Setup Required:</strong> Please configure your API Gateway endpoint URL in the JavaScript section below.
+        </div>
+
+        <div class="input-group">
+            <label for="textInput">Enter your text:</label>
+            <textarea
+                id="textInput"
+                placeholder="Type or paste the text you want to convert to speech..."
+                maxlength="3000"
+            ></textarea>
+            <div class="char-counter">
+                <span id="charCount">0</span> / 3000 characters
+            </div>
+        </div>
+
+        <div class="voice-options">
+            <div class="input-group">
+                <label for="voiceSelect">Voice:</label>
+                <select id="voiceSelect">
+                    <option value="Joanna">Joanna (Female, US)</option>
+                    <option value="Matthew">Matthew (Male, US)</option>
+                    <option value="Salli">Salli (Female, US)</option>
+                    <option value="Joey">Joey (Male, US)</option>
+                    <option value="Ivy">Ivy (Female, US Child)</option>
+                    <option value="Amy">Amy (Female, British)</option>
+                    <option value="Brian">Brian (Male, British)</option>
+                    <option value="Emma">Emma (Female, British)</option>
+                    <option value="Raveena">Raveena (Female, Indian)</option>
+                    <option value="Aditi">Aditi (Female, Indian)</option>
+                    <option value="Kendra">Kendra (Female, US)</option>
+                    <option value="Kimberly">Kimberly (Female, US)</option>
+                    <option value="Justin">Justin (Male, US Child)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="languageSelect">Language:</label>
+                <select id="languageSelect">
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="en-IN">English (India)</option>
+                    <option value="es-ES">Spanish (Spain)</option>
+                    <option value="es-US">Spanish (US)</option>
+                    <option value="fr-FR">French</option>
+                    <option value="de-DE">German</option>
+                    <option value="it-IT">Italian</option>
+                    <option value="pt-BR">Portuguese (Brazil)</option>
+                    <option value="ja-JP">Japanese</option>
+                    <option value="ko-KR">Korean</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="convertBtn" onclick="convertTextToSpeech()">
+            Convert to Speech
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #667eea; font-weight: 600;">Processing your text...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="audio-player" id="audioPlayer">
+            <h3 style="color: #333; margin-bottom: 15px;">Your Audio:</h3>
+            <audio id="audioElement" controls></audio>
+            <button class="download-btn" onclick="downloadAudio()">
+                Download Audio File
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION - API Gateway URL
+        const API_ENDPOINT = 'https://xne7rzjmdh.execute-api.us-east-1.amazonaws.com/prod/text-to-speech';
+
+        let currentAudioUrl = '';
+
+        // Character counter
+        document.getElementById('textInput').addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('charCount').textContent = count;
+        });
+
+        async function convertTextToSpeech() {
+            const text = document.getElementById('textInput').value.trim();
+            const voice = document.getElementById('voiceSelect').value;
+            const language = document.getElementById('languageSelect').value;
+
+            // Validation
+            if (!text) {
+                showError('Please enter some text to convert.');
+                return;
+            }
+
+            if (API_ENDPOINT.includes('YOUR_API_GATEWAY_URL')) {
+                showError('Please configure the API_ENDPOINT in the code with your actual API Gateway URL.');
+                return;
+            }
+
+            // Hide previous results and errors
+            hideError();
+            hideAudioPlayer();
+            showLoading();
+            disableButton();
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        voiceId: voice,
+                        languageCode: language
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.audioUrl) {
+                    currentAudioUrl = data.audioUrl;
+                    playAudio(data.audioUrl);
+                } else if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to convert text to speech: ' + error.message);
+            } finally {
+                hideLoading();
+                enableButton();
+            }
+        }
+
+        function playAudio(url) {
+            const audioElement = document.getElementById('audioElement');
+            audioElement.src = url;
+            showAudioPlayer();
+        }
+
+        function downloadAudio() {
+            if (currentAudioUrl) {
+                const a = document.createElement('a');
+                a.href = currentAudioUrl;
+                a.download = 'speech.mp3';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function showAudioPlayer() {
+            document.getElementById('audioPlayer').classList.add('active');
+        }
+
+        function hideAudioPlayer() {
+            document.getElementById('audioPlayer').classList.remove('active');
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('error');
+            errorElement.textContent = message;
+            errorElement.classList.add('active');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('active');
+        }
+
+        function disableButton() {
+            document.getElementById('convertBtn').disabled = true;
+        }
+
+        function enableButton() {
+            document.getElementById('convertBtn').disabled = false;
+        }
+
+        // Allow Enter key with Ctrl/Cmd to submit
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                convertTextToSpeech();
+            }
+        });
+    </script>
+</body>
+</html>
